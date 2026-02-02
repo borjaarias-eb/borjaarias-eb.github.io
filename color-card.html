@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feature Card Layout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --card-bg: #ffffff;
+            --panel-bg: #f9f9f9;
+            --text-main: #111827;
+            --text-muted: #4b5563;
+            --border-color: rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            background-color: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            transition: background-color 0.3s ease;
+        }
+
+        .dynamic-card {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            transition: all 0.3s ease;
+        }
+
+        .dynamic-panel {
+            background-color: var(--panel-bg);
+            border-color: var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .text-muted-dynamic {
+            color: var(--text-muted);
+        }
+
+        .border-dynamic {
+            border-color: var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Card Container -->
+    <div class="dynamic-card rounded-2xl shadow-2xl overflow-hidden max-w-5xl w-full flex flex-col md:flex-row border border-dynamic">
+        
+        <!-- Main Body (Left Side) -->
+        <div class="flex-1 p-8 md:p-12">
+            <h1 class="text-3xl font-bold mb-6">Smart Contrast Card</h1>
+            
+            <div class="space-y-4 text-muted-dynamic leading-relaxed">
+                <p>
+                    This card now features <strong>Dynamic Contrast Logic</strong>. If you pick a dark background, the side panel will automatically lighten itself. If you pick a light background, it will darken.
+                </p>
+
+                <!-- Color Configurator -->
+                <div class="bg-black/5 p-4 rounded-xl border border-dynamic my-6">
+                    <label for="colorPicker" class="block text-sm font-semibold mb-2">Adjust Card Background (HEX):</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" id="colorPicker" value="#ffffff" class="w-10 h-10 rounded cursor-pointer border-none bg-transparent">
+                        <input type="text" id="colorHex" value="#ffffff" class="bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm font-mono w-32 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <p>
+                    The "middle point" is calculated using the YIQ color space formula. This ensures that the visual weight of the side panel feels natural regardless of the hue or brightness you select.
+                </p>
+            </div>
+
+            <div class="mt-8">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-200">
+                    Action Button
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Side Panel -->
+        <div class="dynamic-panel w-full md:w-80 border-t md:border-t-0 md:border-l flex flex-col">
+            
+            <!-- Image at the very top, no margins -->
+            <div class="w-full aspect-video md:aspect-square overflow-hidden">
+                <img 
+                    src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800" 
+                    alt="Abstract Art" 
+                    class="w-full h-full object-cover"
+                    onerror="this.src='https://via.placeholder.com/400x400?text=Side+Panel+Image'"
+                >
+            </div>
+
+            <!-- Panel Content -->
+            <div class="p-6 space-y-4">
+                <h3 class="text-lg font-semibold">Panel Details</h3>
+                <p class="text-sm text-muted-dynamic">
+                    Note how the background of this panel shifts relative to the main body.
+                </p>
+                <hr class="border-dynamic">
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="opacity-60">Brightness:</span>
+                        <span id="brightnessVal" class="font-medium">255</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="opacity-60">Mode:</span>
+                        <span id="modeVal" class="font-medium">Darkening</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const colorPicker = document.getElementById('colorPicker');
+        const colorHex = document.getElementById('colorHex');
+        const brightnessDisplay = document.getElementById('brightnessVal');
+        const modeDisplay = document.getElementById('modeVal');
+        const root = document.documentElement;
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function updateColor(hex) {
+            if (!/^#[0-9A-F]{6}$/i.test(hex)) return;
+
+            const rgb = hexToRgb(hex);
+            if (!rgb) return;
+
+            // Calculate Brightness using YIQ (standard perceptual formula)
+            // Range is 0 - 255
+            const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+            
+            // UI Feedback
+            brightnessDisplay.textContent = Math.round(brightness);
+            
+            // Set basic variables
+            root.style.setProperty('--card-bg', hex);
+            colorPicker.value = hex;
+            colorHex.value = hex;
+
+            if (brightness < 128) {
+                // DARK BACKGROUND: Lighten the panel and make text white
+                modeDisplay.textContent = "Lightening";
+                root.style.setProperty('--panel-bg', `color-mix(in srgb, ${hex}, white 12%)`);
+                root.style.setProperty('--text-main', '#ffffff');
+                root.style.setProperty('--text-muted', '#d1d5db');
+                root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.1)');
+            } else {
+                // LIGHT BACKGROUND: Darken the panel and make text dark
+                modeDisplay.textContent = "Darkening";
+                root.style.setProperty('--panel-bg', `color-mix(in srgb, ${hex}, black 6%)`);
+                root.style.setProperty('--text-main', '#111827');
+                root.style.setProperty('--text-muted', '#4b5563');
+                root.style.setProperty('--border-color', 'rgba(0, 0, 0, 0.05)');
+            }
+        }
+
+        colorPicker.addEventListener('input', (e) => updateColor(e.target.value));
+        colorHex.addEventListener('input', (e) => updateColor(e.target.value));
+        
+        // Initialize
+        updateColor('#ffffff');
+    </script>
+</body>
+</html>
