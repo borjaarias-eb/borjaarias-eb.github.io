@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Image Resolution Test Summary</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #111827;
+      line-height: 1.5;
+      margin: 40px auto;
+      max-width: 900px;
+      padding: 0 24px;
+    }
+    h1, h2, h3 {
+      color: #0f172a;
+      line-height: 1.2;
+    }
+    table {
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 10px 12px;
+      text-align: left;
+    }
+    th {
+      background: #f8fafc;
+      font-weight: 600;
+    }
+    code {
+      background: #f1f5f9;
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+    .comparison-image {
+      border: 1px solid #cbd5e1;
+      display: block;
+      height: auto;
+      margin: 12px 0 8px;
+      max-width: 100%;
+    }
+    figure {
+      margin: 24px 0 32px;
+    }
+    figcaption {
+      color: #475569;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Image Resolution Test Summary</h1>
+
+  <h2>Scope</h2>
+  <p>We compared the current <code>720w</code> image against the newer <code>1440w</code> image for the same asset family and measured image request time in Chrome DevTools Network.</p>
+  <p>We also checked the LCP breakdown and confirmed that this image is the LCP element on the tested page.</p>
+
+  <h2>Data Sources</h2>
+  <ul>
+    <li>Network timings captured for:
+      <ul>
+        <li>unthrottled</li>
+        <li>Slow 4G</li>
+        <li>3G</li>
+      </ul>
+    </li>
+    <li>LCP breakdown from DevTools Performance</li>
+    <li>Raw timing samples stored in:
+      <ul>
+        <li><code>network_image_times_720_vs_1440.csv</code></li>
+      </ul>
+    </li>
+  </ul>
+
+  <h2>Average Request Time</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Network</th>
+        <th>720w</th>
+        <th>1440w</th>
+        <th>Delta</th>
+        <th>Relative change</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Unthrottled</td>
+        <td>137.0 ms</td>
+        <td>169.4 ms</td>
+        <td>+32.4 ms</td>
+        <td>+23.6%</td>
+      </tr>
+      <tr>
+        <td>Slow 4G</td>
+        <td>1785.0 ms</td>
+        <td>3780.0 ms</td>
+        <td>+1995.0 ms</td>
+        <td>+111.8%</td>
+      </tr>
+      <tr>
+        <td>3G</td>
+        <td>6367.5 ms</td>
+        <td>13725.0 ms</td>
+        <td>+7357.5 ms</td>
+        <td>+115.5%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Visual Comparison</h2>
+  <p>The screenshots below show the compared checkout variants. The image with <code>x3</code> in the original filename is the case loading the <code>1440w</code> asset.</p>
+
+  <figure>
+    <img class="comparison-image" src="image_resolution_720w.png" alt="Checkout screenshot using the 720w image">
+    <figcaption>Baseline checkout screenshot using the <code>720w</code> image.</figcaption>
+  </figure>
+
+  <figure>
+    <img class="comparison-image" src="image_resolution_1440w_x3.png" alt="Checkout screenshot using the 1440w image from the x3 variant">
+    <figcaption>Checkout screenshot from the <code>x3</code> variant, which loads the <code>1440w</code> image.</figcaption>
+  </figure>
+
+  <h2>LCP Breakdown Observed</h2>
+  <p>From the DevTools LCP breakdown for the tested page:</p>
+  <ul>
+    <li>Time to first byte: <code>2780 ms</code></li>
+    <li>Resource load delay: <code>70 ms</code></li>
+    <li>Resource load duration: <code>160 ms</code></li>
+    <li>Element render delay: <code>500 ms</code></li>
+  </ul>
+  <p>The image is the LCP element, but the biggest contributor to total LCP in this trace is server response time, followed by render delay after the image is available.</p>
+
+  <h2>Interpretation</h2>
+
+  <h3>Unthrottled</h3>
+  <p>On a fast connection, the move from <code>720w</code> to <code>1440w</code> adds about <code>32 ms</code> on average. That is measurable but relatively small in the context of a multi-second LCP.</p>
+
+  <h3>Slow 4G and 3G</h3>
+  <p>On constrained networks, the larger image has a much larger impact:</p>
+  <ul>
+    <li>Slow 4G adds about <code>2.0 s</code></li>
+    <li>3G adds about <code>7.4 s</code></li>
+  </ul>
+  <p>This means the higher-resolution image is much more likely to materially worsen LCP for users on slower networks, especially because this image is the LCP element.</p>
+
+  <h2>Main Conclusion</h2>
+  <p>The <code>1440w</code> image does have potential LCP impact.</p>
+  <ul>
+    <li>On fast connections, the impact appears modest.</li>
+    <li>On Slow 4G and 3G, the impact is significant and likely user-visible.</li>
+    <li>In the current trace, overall LCP is still dominated by backend <code>TTFB</code>, so image optimization is not the largest performance opportunity.</li>
+  </ul>
+
+  <h2>Recommendation</h2>
+  <p>Use the <code>1440w</code> image only when there is a clear visual quality requirement that justifies the cost.</p>
+  <p>If we keep the higher-resolution asset, we should also:</p>
+  <ul>
+    <li>verify the rendered slot size and avoid overserving bytes</li>
+    <li>confirm the browser is not selecting <code>1440w</code> for cases where <code>720w</code> is visually sufficient</li>
+    <li>prioritize improving <code>TTFB</code>, since that is the largest current LCP contributor</li>
+    <li>investigate the <code>500 ms</code> render delay after image load</li>
+  </ul>
+
+  <h2>Suggested Team Takeaway</h2>
+  <p>Increasing this LCP image from <code>720w</code> to <code>1440w</code> causes a small regression on fast connections but a very large regression on Slow 4G and 3G. Since this image is the LCP element, the change can meaningfully worsen user experience on slower networks. The current page's biggest LCP bottleneck is still <code>TTFB</code>, so backend improvements should remain the top priority.</p>
+</body>
+</html>
