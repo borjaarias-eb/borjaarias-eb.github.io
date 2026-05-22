@@ -482,7 +482,12 @@ body {
       }, delay);
     }
 
+    const queryUpdatesButton = document.getElementById('query-updates');
+    if (queryUpdatesButton) {
+      queryUpdatesButton.addEventListener('click', queryForUpdates);
+    }
+
     setTimeout(scheduleNextMeme, randomBetween(2000, 6000));
-    setTimeout(scheduleFlyAttempt, randomBetween(30000, 90000));
+    setTimeout(scheduleFlyAttempt, randomBetween(10000, 40000));
   </script>
 </body>
