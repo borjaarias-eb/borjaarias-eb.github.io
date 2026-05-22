@@ -10,6 +10,10 @@
   --page-background: #ffffff;
   --status-background: #008000;
   --status-text: #ffffff;
+  --button-background: rgba(255, 255, 255, 0.16);
+  --button-background-hover: rgba(255, 255, 255, 0.28);
+  --button-border: rgba(255, 255, 255, 0.65);
+  --button-shadow: rgba(0, 0, 0, 0.25);
   --meme-shadow: rgba(0, 0, 0, 0.35);
 }
 
@@ -18,6 +22,10 @@
     --page-background: #06140b;
     --status-background: #0b3d1c;
     --status-text: #f6fff7;
+    --button-background: rgba(246, 255, 247, 0.12);
+    --button-background-hover: rgba(246, 255, 247, 0.22);
+    --button-border: rgba(246, 255, 247, 0.55);
+    --button-shadow: rgba(0, 0, 0, 0.5);
     --meme-shadow: rgba(0, 0, 0, 0.6);
   }
 }
@@ -64,6 +72,36 @@
 body {
     margin:0;
     background-color:var(--page-background);
+}
+
+.update-button {
+  position: fixed;
+  left: 50%;
+  bottom: 2rem;
+  z-index: 1003;
+  min-height: 2.75rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--button-border);
+  border-radius: 8px;
+  background-color: var(--button-background);
+  color: var(--status-text);
+  box-shadow: 0 4px 16px var(--button-shadow);
+  cursor: pointer;
+  font: 700 0.95rem/1.2 system-ui, sans-serif;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.update-button:hover {
+  background-color: var(--button-background-hover);
+  transform: translateX(-50%) translateY(-1px);
+}
+
+.update-button:focus-visible {
+  outline: 3px solid var(--status-text);
+  outline-offset: 3px;
 }
 
 .meme-overlay {
@@ -124,8 +162,36 @@ body {
 </head>
 
 <body>
-  <div class="container"><div class="text">NOTHING TO SEE HERE, YET.</div><div class="subtitle">Come back 3th June</div></div>
+  <div class="container"><div class="text" id="status-text" aria-live="polite">NOTHING TO SEE HERE, YET.</div><div class="subtitle" id="status-subtitle">Come back 3th June</div></div>
+  <button class="update-button" id="query-updates" type="button">Query for updates</button>
   <script>
+    const UPDATE_MESSAGES = [
+      {
+        text: 'NOTHING TO SEE HERE, YET.',
+        subtitle: 'Come back 3th June'
+      },
+      {
+        text: 'NO NEWS TO REPORT.',
+        subtitle: 'Still come back 3th June'
+      },
+      {
+        text: 'UPDATE CHECK COMPLETE: STILL NOTHING.',
+        subtitle: 'Try again later'
+      },
+      {
+        text: 'STATUS UNCHANGED.',
+        subtitle: 'The wait continues'
+      },
+      {
+        text: 'NO FRESH UPDATES FOUND.',
+        subtitle: 'Same place, same suspense'
+      },
+      {
+        text: 'QUERY RETURNED ZERO NEWS.',
+        subtitle: 'Come back 3th June'
+      }
+    ];
+
     const MEME_URLS = [
       'memes/nothing-to-see-here.jpg',
       'memes/meme-arsenal.jpg',
@@ -140,9 +206,21 @@ body {
     const pageOpenedAt = Date.now();
     let activeMemeImages = 0;
     let activeFly = null;
+    let updateMessageIndex = 0;
 
     function randomBetween(min, max) {
       return Math.random() * (max - min) + min;
+    }
+
+    function queryForUpdates() {
+      const text = document.getElementById('status-text');
+      const subtitle = document.getElementById('status-subtitle');
+
+      if (!text || !subtitle) return;
+
+      updateMessageIndex = (updateMessageIndex + 1) % UPDATE_MESSAGES.length;
+      text.textContent = UPDATE_MESSAGES[updateMessageIndex].text;
+      subtitle.textContent = UPDATE_MESSAGES[updateMessageIndex].subtitle;
     }
 
     function getContainedImageRect(img, boxW, boxH) {
