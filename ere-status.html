@@ -43,11 +43,88 @@
 body {
     margin:0;
 }
-</style>
-<style>
+
+.meme-overlay {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 1.2s ease-in-out;
+}
+
+.meme-overlay.visible {
+  opacity: 0.92;
+}
+
+.meme-overlay img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
+}
 </style>
 </head>
 
 <body>
   <div class="container"><div class="text">NOTHING TO SEE HERE, YET.</div><div class="subtitle">Come back 3th June</div></div>
+  <script>
+    const MEME_URLS = [
+      'memes/nothing-to-see-here.jpg',
+      'memes/meme-arsenal.jpg',
+      'memes/google-meme.jpg',
+      'memes/chronicle-nothing-to-see.jpg',
+      'memes/imgflip-4xyjge.png'
+    ];
+
+    function randomBetween(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function spawnMeme() {
+      const baseSize = Math.min(window.innerWidth, window.innerHeight) * 0.2;
+      const size = baseSize * randomBetween(0.75, 1.25);
+      const rotation = randomBetween(-55, 55);
+      const maxX = Math.max(0, window.innerWidth - size);
+      const maxY = Math.max(0, window.innerHeight - size);
+
+      const overlay = document.createElement('div');
+      overlay.className = 'meme-overlay';
+      overlay.style.width = size + 'px';
+      overlay.style.height = size + 'px';
+      overlay.style.left = randomBetween(0, maxX) + 'px';
+      overlay.style.top = randomBetween(0, maxY) + 'px';
+      overlay.style.transform = 'rotate(' + rotation + 'deg)';
+
+      const img = document.createElement('img');
+      img.src = MEME_URLS[Math.floor(Math.random() * MEME_URLS.length)];
+      img.alt = '';
+      overlay.appendChild(img);
+      document.body.appendChild(overlay);
+
+      requestAnimationFrame(function () {
+        overlay.classList.add('visible');
+      });
+
+      const visibleMs = randomBetween(2500, 6000);
+      setTimeout(function () {
+        overlay.classList.remove('visible');
+        setTimeout(function () {
+          overlay.remove();
+        }, 1200);
+      }, visibleMs);
+    }
+
+    function scheduleNextMeme() {
+      const delay = randomBetween(4000, 15000);
+      setTimeout(function () {
+        spawnMeme();
+        if (Math.random() < 0.25) {
+          setTimeout(spawnMeme, randomBetween(300, 1200));
+        }
+        scheduleNextMeme();
+      }, delay);
+    }
+
+    setTimeout(scheduleNextMeme, randomBetween(2000, 6000));
+  </script>
 </body>
