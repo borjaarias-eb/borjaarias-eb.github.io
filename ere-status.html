@@ -1,12 +1,33 @@
 <head>
 <title> ERE Negotiation Status </title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#008000" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#06140b" media="(prefers-color-scheme: dark)">
 
 <style>
+:root {
+  color-scheme: light dark;
+  --page-background: #ffffff;
+  --status-background: #008000;
+  --status-text: #ffffff;
+  --meme-shadow: rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page-background: #06140b;
+    --status-background: #0b3d1c;
+    --status-text: #f6fff7;
+    --meme-shadow: rgba(0, 0, 0, 0.6);
+  }
+}
+
 .container {
-  background-color:green;
-  color:white;
+  background-color:var(--status-background);
+  color:var(--status-text);
   width:100%;
   height:100%;
+  min-height:100vh;
   display:flex;
   flex-direction:column;
   flex-wrap:wrap;
@@ -26,7 +47,7 @@
     display:block;
     text-align:center;
     font-size:1.5rem;
-    color:white;
+    color:var(--status-text);
 }
 
 @keyframes blink {  
@@ -42,6 +63,7 @@
 }
 body {
     margin:0;
+    background-color:var(--page-background);
 }
 
 .meme-overlay {
@@ -54,13 +76,49 @@ body {
 
 .meme-overlay.visible {
   opacity: 0.92;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .meme-overlay img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
+  filter: drop-shadow(0 4px 12px var(--meme-shadow));
+  pointer-events: none;
+}
+
+.snap-container {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1001;
+  transform-origin: center center;
+}
+
+.snap-tile {
+  position: absolute;
+  will-change: transform, opacity, filter;
+}
+
+.fly-overlay {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1002;
+  opacity: 0;
+  transition: opacity 0.6s ease-in;
+}
+
+.fly-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.fly-overlay img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
 }
 </style>
 </head>
@@ -76,11 +134,185 @@ body {
       'memes/imgflip-4xyjge.png'
     ];
 
+    const FLY_SRC = 'memes/fly-on-screen.gif';
+    const MAX_MEME_IMAGES = 25;
+    const MEME_RAMP_MS = 10 * 60 * 1000;
+    const pageOpenedAt = Date.now();
+    let activeMemeImages = 0;
+    let activeFly = null;
+
     function randomBetween(min, max) {
       return Math.random() * (max - min) + min;
     }
 
+    function getContainedImageRect(img, boxW, boxH) {
+      const scale = Math.min(boxW / img.naturalWidth, boxH / img.naturalHeight);
+      const w = img.naturalWidth * scale;
+      const h = img.naturalHeight * scale;
+      return {
+        x: (boxW - w) / 2,
+        y: (boxH - h) / 2,
+        w: w,
+        h: h
+      };
+    }
+
+    function snapExplode(overlay, img) {
+      const boxW = overlay.offsetWidth;
+      const boxH = overlay.offsetHeight;
+
+      if (!img.naturalWidth || !img.naturalHeight || boxW < 1 || boxH < 1) {
+        overlay.remove();
+        return;
+      }
+
+      const fit = getContainedImageRect(img, boxW, boxH);
+      const left = overlay.style.left;
+      const top = overlay.style.top;
+      const transform = overlay.style.transform;
+      const src = img.currentSrc || img.src;
+      const step = 5;
+      const tiles = [];
+
+      const container = document.createElement('div');
+      container.className = 'snap-container';
+      container.style.left = left;
+      container.style.top = top;
+      container.style.width = boxW + 'px';
+      container.style.height = boxH + 'px';
+      container.style.transform = transform;
+
+      overlay.remove();
+      document.body.appendChild(container);
+
+      for (let y = fit.y; y < fit.y + fit.h - 1; y += step) {
+        for (let x = fit.x; x < fit.x + fit.w - 1; x += step) {
+          const tileW = Math.min(step, fit.x + fit.w - x);
+          const tileH = Math.min(step, fit.y + fit.h - y);
+          const sliceX = x - fit.x;
+          const sliceY = y - fit.y;
+
+          const tile = document.createElement('div');
+          tile.className = 'snap-tile';
+          tile.style.left = x + 'px';
+          tile.style.top = y + 'px';
+          tile.style.width = tileW + 'px';
+          tile.style.height = tileH + 'px';
+          tile.style.backgroundImage = 'url("' + src + '")';
+          tile.style.backgroundSize = fit.w + 'px ' + fit.h + 'px';
+          tile.style.backgroundPosition = (-sliceX) + 'px ' + (-sliceY) + 'px';
+          container.appendChild(tile);
+
+          tiles.push({
+            el: tile,
+            tx: 0,
+            ty: 0,
+            vx: randomBetween(-4, 4),
+            vy: randomBetween(-8, -2),
+            spin: randomBetween(-15, 15),
+            life: 1,
+            decay: randomBetween(0.004, 0.012),
+            delay: Math.random() * 0.8
+          });
+        }
+      }
+
+      if (!tiles.length) {
+        container.remove();
+        return;
+      }
+
+      function frame() {
+        let alive = false;
+
+        for (let i = 0; i < tiles.length; i++) {
+          const tile = tiles[i];
+
+          if (tile.delay > 0) {
+            tile.delay -= 0.016;
+            alive = true;
+            continue;
+          }
+
+          tile.life -= tile.decay;
+          if (tile.life <= 0) {
+            tile.el.style.opacity = '0';
+            continue;
+          }
+
+          alive = true;
+          tile.tx += tile.vx;
+          tile.ty += tile.vy;
+          tile.vy -= 0.12;
+          tile.vx *= 0.985;
+
+          const dust = 1 - tile.life;
+          tile.el.style.transform = 'translate(' + tile.tx + 'px,' + tile.ty + 'px) rotate(' + (tile.spin * dust) + 'deg)';
+          tile.el.style.opacity = String(tile.life);
+          tile.el.style.filter = 'grayscale(' + Math.floor(dust * 100) + '%) brightness(' + (1 + dust * 0.4) + ')';
+        }
+
+        if (alive) {
+          requestAnimationFrame(frame);
+        } else {
+          container.remove();
+        }
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    function spawnFly() {
+      if (activeFly) return;
+
+      const size = randomBetween(44, 72);
+      const maxX = Math.max(0, window.innerWidth - size);
+      const maxY = Math.max(0, window.innerHeight - size);
+
+      const overlay = document.createElement('div');
+      overlay.className = 'fly-overlay';
+      overlay.style.width = size + 'px';
+      overlay.style.height = size + 'px';
+      overlay.style.left = randomBetween(0, maxX) + 'px';
+      overlay.style.top = randomBetween(0, maxY) + 'px';
+      overlay.style.transform = 'rotate(' + randomBetween(-25, 25) + 'deg)';
+
+      const img = document.createElement('img');
+      img.src = FLY_SRC;
+      img.alt = '';
+      overlay.appendChild(img);
+      document.body.appendChild(overlay);
+      activeFly = overlay;
+
+      overlay.addEventListener('click', function () {
+        if (!overlay.classList.contains('visible')) return;
+        activeFly = null;
+        overlay.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out';
+        overlay.style.opacity = '0';
+        overlay.style.transform += ' scale(0.4)';
+        setTimeout(function () {
+          overlay.remove();
+        }, 200);
+      });
+
+      requestAnimationFrame(function () {
+        overlay.classList.add('visible');
+      });
+    }
+
+    function scheduleFlyAttempt() {
+      const delay = randomBetween(90000, 240000);
+      setTimeout(function () {
+        if (!activeFly && Math.random() < 0.3) {
+          spawnFly();
+        }
+        scheduleFlyAttempt();
+      }, delay);
+    }
+
     function spawnMeme() {
+      if (activeMemeImages >= MAX_MEME_IMAGES) return false;
+
       const baseSize = Math.min(window.innerWidth, window.innerHeight) * 0.2;
       const size = baseSize * randomBetween(0.75, 1.25);
       const rotation = randomBetween(-55, 55);
@@ -100,31 +332,79 @@ body {
       img.alt = '';
       overlay.appendChild(img);
       document.body.appendChild(overlay);
+      activeMemeImages += 1;
+
+      let exploded = false;
+      let removed = false;
+      let fadeTimeout;
+      let removeTimeout;
+
+      function clearMemeTimers() {
+        clearTimeout(fadeTimeout);
+        clearTimeout(removeTimeout);
+      }
+
+      function removeMeme() {
+        if (removed) return;
+        removed = true;
+        activeMemeImages -= 1;
+        overlay.remove();
+      }
+
+      overlay.addEventListener('click', function () {
+        if (exploded || !overlay.classList.contains('visible')) return;
+        if (!img.complete || !img.naturalWidth) return;
+        exploded = true;
+        clearMemeTimers();
+        activeMemeImages -= 1;
+        removed = true;
+        snapExplode(overlay, img);
+      });
 
       requestAnimationFrame(function () {
         overlay.classList.add('visible');
       });
 
       const visibleMs = randomBetween(2500, 6000);
-      setTimeout(function () {
+      fadeTimeout = setTimeout(function () {
+        if (exploded) return;
         overlay.classList.remove('visible');
-        setTimeout(function () {
-          overlay.remove();
+        removeTimeout = setTimeout(function () {
+          if (!exploded) removeMeme();
         }, 1200);
       }, visibleMs);
+
+      return true;
+    }
+
+    function getMemeSchedule() {
+      const ramp = Math.min(1, (Date.now() - pageOpenedAt) / MEME_RAMP_MS);
+
+      return {
+        minDelay: 4000 - (ramp * 3100),
+        maxDelay: 15000 - (ramp * 12500),
+        burstChance: 0.25 + (ramp * 0.6),
+        maxBurstImages: 1 + Math.floor(ramp * 3)
+      };
     }
 
     function scheduleNextMeme() {
-      const delay = randomBetween(4000, 15000);
+      const schedule = getMemeSchedule();
+      const delay = randomBetween(schedule.minDelay, schedule.maxDelay);
       setTimeout(function () {
         spawnMeme();
-        if (Math.random() < 0.25) {
-          setTimeout(spawnMeme, randomBetween(300, 1200));
+        if (Math.random() < schedule.burstChance) {
+          const burstImages = Math.floor(randomBetween(1, schedule.maxBurstImages + 1));
+
+          for (let i = 0; i < burstImages; i++) {
+            setTimeout(spawnMeme, randomBetween(250, 1200 + (i * 300)));
+          }
         }
         scheduleNextMeme();
       }, delay);
     }
 
     setTimeout(scheduleNextMeme, randomBetween(2000, 6000));
+    setTimeout(scheduleFlyAttempt, randomBetween(30000, 90000));
   </script>
 </body>
