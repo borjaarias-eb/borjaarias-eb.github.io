@@ -56,6 +56,43 @@
   font-size:clamp(2rem, 8vw, 3rem);
   line-height:1.08;
   animation: blink 3s infinite;
+  position:relative;
+  overflow:hidden;
+}
+
+.hearts {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  overflow:hidden;
+}
+
+.container > :not(.hearts) {
+  position:relative;
+  z-index:1;
+}
+
+.heart {
+  position:absolute;
+  line-height:1;
+  opacity:0.85;
+  animation:heart-float var(--heart-duration, 4s) ease-in-out infinite;
+  animation-delay:var(--heart-delay, 0s);
+  transform:rotate(var(--heart-rotation, 0deg));
+  text-shadow:0 1px 6px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes heart-float {
+  0%, 100% {
+    transform:translateY(0) rotate(var(--heart-rotation, 0deg)) scale(1);
+    opacity:0.65;
+  }
+
+  50% {
+    transform:translateY(-14px) rotate(calc(var(--heart-rotation, 0deg) + 12deg)) scale(1.08);
+    opacity:1;
+  }
 }
 
 .countdown {
@@ -81,6 +118,33 @@
     font-size:clamp(1rem, 4.8vw, 1.5rem);
     line-height:1.2;
     color:var(--status-text);
+}
+
+.thanks {
+    display:block;
+    text-align:center;
+    max-width:min(100%, 24rem);
+    margin-top:1rem;
+    font-size:clamp(0.875rem, 3.8vw, 1.125rem);
+    line-height:1.5;
+    color:var(--status-text);
+    opacity:0.92;
+}
+
+.thanks-hearts {
+    display:block;
+    margin:0.35rem 0;
+    font-size:clamp(1rem, 4.5vw, 1.35rem);
+    letter-spacing:0.2em;
+    line-height:1.4;
+}
+
+.thanks-hearts .heart-red {
+    color:#ff2d2d;
+}
+
+.thanks-hearts .heart-orange {
+    color:#ff9100;
 }
 
 @keyframes blink {  
@@ -203,7 +267,8 @@ body {
   }
 
   .text,
-  .subtitle {
+  .subtitle,
+  .thanks {
     width:100%;
     max-width:none;
   }
@@ -331,9 +396,15 @@ body {
 
 <body>
   <div class="container">
+    <div class="hearts" id="hearts" aria-hidden="true"></div>
     <div class="countdown" id="countdown-text">00:00:00</div>
     <div class="text" id="status-text" aria-live="polite">NOTHING TO SEE HERE, YET.</div>
     <div class="subtitle" id="status-subtitle">Come back 3rd June</div>
+    <p class="thanks">
+      <span class="thanks-hearts" aria-hidden="true">♥ ♥ ♥ ♥ ♥ ♥ ♥ ♥ ♥ ♥ ♥ ♥</span>
+      Thank you Ricardo Mavi and Carlos — we couldn't have got here without you.
+      <span class="thanks-hearts" aria-hidden="true">♥ ♥ ♥ ♥ ♥ ♥ ♥ ♥ ♥ ♥ ♥ ♥</span>
+    </p>
   </div>
   <div class="action-bar">
     <button class="update-button" id="query-updates" type="button">Query for updates</button>
@@ -483,8 +554,47 @@ Thank you all for your trust, patience, support and the many messages we've rece
       popMemeScore();
     }
 
+    const HEART_COLORS = ['#ff2d2d', '#ff1744', '#e53935', '#ff5252', '#ff6f00', '#ff9100', '#ffab40', '#ff5722'];
+    const FLOATING_HEART_COUNT = 72;
+
     function randomBetween(min, max) {
       return Math.random() * (max - min) + min;
+    }
+
+    function spawnFloatingHearts() {
+      const container = document.getElementById('hearts');
+      if (!container) return;
+
+      for (let i = 0; i < FLOATING_HEART_COUNT; i++) {
+        const heart = document.createElement('span');
+        heart.className = 'heart';
+        heart.textContent = '♥';
+        heart.style.left = randomBetween(-2, 98) + '%';
+        heart.style.top = randomBetween(-2, 98) + '%';
+        heart.style.color = HEART_COLORS[Math.floor(Math.random() * HEART_COLORS.length)];
+        heart.style.fontSize = randomBetween(14, 42) + 'px';
+        heart.style.setProperty('--heart-duration', randomBetween(2.5, 6.5) + 's');
+        heart.style.setProperty('--heart-delay', randomBetween(0, 4) + 's');
+        heart.style.setProperty('--heart-rotation', randomBetween(-35, 35) + 'deg');
+        container.appendChild(heart);
+      }
+    }
+
+    function colorThanksHearts() {
+      const heartRows = document.querySelectorAll('.thanks-hearts');
+
+      for (let rowIndex = 0; rowIndex < heartRows.length; rowIndex++) {
+        const row = heartRows[rowIndex];
+        const hearts = row.textContent.split(/\s+/).filter(Boolean);
+        row.textContent = '';
+
+        for (let heartIndex = 0; heartIndex < hearts.length; heartIndex++) {
+          const heart = document.createElement('span');
+          heart.textContent = '♥ ';
+          heart.className = (rowIndex + heartIndex) % 2 === 0 ? 'heart-red' : 'heart-orange';
+          row.appendChild(heart);
+        }
+      }
     }
 
     function formatAgreementParagraphs(raw) {
@@ -891,6 +1001,8 @@ Thank you all for your trust, patience, support and the many messages we've rece
     updateCountdown();
     loadMemeScore();
     renderMemeScore();
+    spawnFloatingHearts();
+    colorThanksHearts();
     queryForUpdates();
     setTimeout(scheduleNextMeme, randomBetween(2000, 6000));
     setTimeout(scheduleFlyAttempt, randomBetween(10000, 40000));
