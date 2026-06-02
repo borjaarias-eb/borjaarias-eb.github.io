@@ -50,6 +50,14 @@
   animation: blink 3s infinite;
 }
 
+.countdown {
+    width: 100%;
+    text-align: center;
+    display: block;
+    font-size: 5rem;
+    margin: 2rem;
+}
+
 .text {
     width:min(100%, 18ch);
     text-align:center;
@@ -192,9 +200,15 @@ body {
 </head>
 
 <body>
-  <div class="container"><div class="text" id="status-text" aria-live="polite">NOTHING TO SEE HERE, YET.</div><div class="subtitle" id="status-subtitle">Come back 3rd June</div></div>
+  <div class="container">
+    <div class="countdown" id="countdown-text">00:00:00</div>
+    <div class="text" id="status-text" aria-live="polite">NOTHING TO SEE HERE, YET.</div>
+    <div class="subtitle" id="status-subtitle">Come back 3rd June</div>
+  </div>
   <button class="update-button" id="query-updates" type="button">Query for updates</button>
   <script>
+    const TARGET_TIME = new Date("2026-06-03T07:00:00.000Z").getTime();
+
     const UPDATE_MESSAGES = [
       {
         text: 'NOTHING TO SEE HERE, YET.',
@@ -513,10 +527,32 @@ body {
       }, delay);
     }
 
+    function updateCountdown() {
+      const countdownText = document.getElementById("countdown-text");
+      if (countdownText) {
+        const now = Date.now();
+        const timeLeft = TARGET_TIME - now;
+        if (timeLeft > 0) {
+          const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+          const minutes = Math.floor(
+            (timeLeft % (1000 * 60 * 60)) / (1000 * 60),
+          );
+          const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+          countdownText.textContent = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+          setTimeout(updateCountdown, 1000);
+        } else {
+          countdownText.textContent = "00:00:00";
+        }
+      }
+    }
+
     const queryUpdatesButton = document.getElementById('query-updates');
     if (queryUpdatesButton) {
       queryUpdatesButton.addEventListener('click', queryForUpdates);
     }
+
+    updateCountdown();
 
     setTimeout(scheduleNextMeme, randomBetween(2000, 6000));
     setTimeout(scheduleFlyAttempt, randomBetween(10000, 40000));
