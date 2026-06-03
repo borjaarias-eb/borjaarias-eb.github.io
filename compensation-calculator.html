@@ -15,6 +15,8 @@
       --border: #d8e0ea;
       --accent: #2563eb;
       --accent-soft: #dbeafe;
+      --warning: #b45309;
+      --warning-soft: #fef3c7;
       --shadow: rgba(15, 23, 42, 0.08);
     }
 
@@ -28,6 +30,8 @@
         --border: #30394a;
         --accent: #60a5fa;
         --accent-soft: #1e3a5f;
+        --warning: #fbbf24;
+        --warning-soft: #3f2f12;
         --shadow: rgba(0, 0, 0, 0.3);
       }
     }
@@ -47,7 +51,7 @@
     }
 
     main {
-      width: min(100%, 960px);
+      width: min(100%, 1280px);
       margin: 0 auto;
     }
 
@@ -73,14 +77,31 @@
 
     .intro {
       max-width: 42rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1rem;
       color: var(--muted);
       font-size: 1.1rem;
     }
 
+    .disclaimer {
+      max-width: 48rem;
+      margin: 0 0 2rem;
+      padding: 1rem;
+      border: 2px solid var(--warning);
+      border-radius: 8px;
+      background: var(--warning-soft);
+      color: var(--text);
+      box-shadow: 0 12px 28px var(--shadow);
+      font-size: 1rem;
+    }
+
+    .disclaimer strong {
+      color: var(--warning);
+      text-transform: uppercase;
+    }
+
     .calculator {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.9fr);
+      grid-template-columns: minmax(16rem, 0.7fr) minmax(0, 1.8fr);
       gap: 1rem;
       align-items: start;
     }
@@ -105,7 +126,79 @@
       font-weight: 700;
     }
 
-    input {
+    .checkbox-label {
+      display: flex;
+      gap: 0.65rem;
+      align-items: flex-start;
+      padding: 0.85rem;
+      border-radius: 8px;
+      background: var(--surface-muted);
+    }
+
+    .checkbox-label input {
+      width: 1.1rem;
+      min-height: 1.1rem;
+      margin-top: 0.15rem;
+      accent-color: var(--accent);
+    }
+
+    .checkbox-text {
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .label-title {
+      display: inline-flex;
+      gap: 0.35rem;
+      align-items: center;
+    }
+
+    .tooltip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: var(--surface-muted);
+      color: var(--muted);
+      cursor: help;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .tooltip::after {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 0.5rem);
+      z-index: 2;
+      width: min(16rem, 80vw);
+      padding: 0.6rem 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 12px 24px var(--shadow);
+      color: var(--text);
+      content: attr(aria-label);
+      font-size: 0.85rem;
+      font-weight: 500;
+      line-height: 1.35;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 0.25rem);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+
+    .tooltip:hover::after,
+    .tooltip:focus-visible::after {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    input,
+    select {
       width: 100%;
       min-height: 3rem;
       padding: 0.7rem 0.85rem;
@@ -116,7 +209,17 @@
       font: 600 1rem/1.2 inherit;
     }
 
-    input:focus {
+    select {
+      cursor: pointer;
+    }
+
+    select:disabled {
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
+
+    input:focus,
+    select:focus {
       border-color: var(--accent);
       outline: 3px solid var(--accent-soft);
     }
@@ -131,6 +234,13 @@
     .result {
       display: grid;
       gap: 1rem;
+    }
+
+    .results-area {
+      display: grid;
+      grid-template-columns: minmax(17rem, 0.9fr) minmax(20rem, 1fr);
+      gap: 1rem;
+      align-items: start;
     }
 
     .total {
@@ -188,8 +298,49 @@
       font-size: 0.95rem;
     }
 
-    @media (max-width: 760px) {
-      .calculator {
+    .tax-note {
+      display: grid;
+      gap: 0.85rem;
+      padding: 1rem;
+      border: 1px solid var(--warning);
+      border-radius: 8px;
+      background: var(--warning-soft);
+      color: var(--text);
+    }
+
+    .tax-note h2 {
+      margin-bottom: 0;
+      color: var(--warning);
+    }
+
+    .tax-note p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .tax-note a {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .tax-control {
+      display: grid;
+      gap: 0.45rem;
+      padding: 0.85rem;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.42);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .tax-control {
+        background: rgba(255, 255, 255, 0.06);
+      }
+    }
+
+    @media (max-width: 980px) {
+      .calculator,
+      .results-area {
         grid-template-columns: 1fr;
       }
     }
@@ -199,51 +350,99 @@
   <main>
     <h1>Compensation Calculator</h1>
     <p class="intro">Estimate severance as max(33 days per worked year on total compensation + 2 months of base salary, 4 months of base salary).</p>
+    <p class="disclaimer"><strong>Good faith disclaimer:</strong> this page is provided for information only. It is an approximation, not legal, tax, payroll, or financial advice.</p>
 
     <section class="calculator" aria-label="Compensation calculator">
       <div class="panel fields" id="calculatorForm">
         <h2>Inputs</h2>
         <label>
-          Base salary
+          <span class="label-title">Base salary <span class="tooltip" tabindex="0" aria-label="In Workday, go to Profile > Compensation > Total Base Pay.">i</span></span>
           <input id="baseSalary" type="number" min="0" step="100" inputmode="decimal" placeholder="Example: 60000">
+          <p class="hint">Workday > Profile > Compensation > Total Base Pay</p>
         </label>
         <label>
-          Total salary
+          <span class="label-title">Total salary <span class="tooltip" tabindex="0" aria-label="Use the annual total from your Total Compensation Statement PDF, including bonus and other compensation.">i</span></span>
           <input id="totalSalary" type="number" min="0" step="100" inputmode="decimal" placeholder="Example: 75000">
-          <p class="hint">Including bonus and all. Check Workday total compensation.</p>
+          <p class="hint">Including bonus, on call, forma, etc (make an approximation)</p>
         </label>
         <label>
           Tenure in years
           <input id="tenureYears" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Example: 4.5">
         </label>
+        <label class="checkbox-label">
+          <input id="beckhamLaw" type="checkbox">
+          <span class="checkbox-text">
+            Beckham Law applies
+            <span class="hint">Estimate 24% tax on the full severance total.</span>
+          </span>
+        </label>
       </div>
 
-      <section class="panel result" aria-live="polite">
-        <h2>Output</h2>
-        <div class="total">
-          <span>Severance</span>
-          <strong id="totalOutput">0.00</strong>
-        </div>
-        <div>
-          <div class="line" id="calculatedLine">
-            <span>33 days/year + 2 months</span>
-            <strong id="calculatedOutput">0.00</strong>
+      <div class="results-area">
+        <section class="panel result" aria-live="polite">
+          <h2>Output</h2>
+          <div class="total">
+            <span>Severance</span>
+            <strong id="totalOutput">0.00</strong>
           </div>
-          <div class="line" id="minimumLine">
-            <span>4 month minimum</span>
-            <strong id="minimumOutput">0.00</strong>
+          <div>
+            <div class="line" id="calculatedLine">
+              <span>33 days/year + 2 months</span>
+              <strong id="calculatedOutput">0.00</strong>
+            </div>
+            <div class="line" id="minimumLine">
+              <span>4 month minimum</span>
+              <strong id="minimumOutput">0.00</strong>
+            </div>
+            <div class="line">
+              <span>33 days per year</span>
+              <strong id="daysOutput">0.00</strong>
+            </div>
+            <div class="line">
+              <span>2 base salary months</span>
+              <strong id="extraOutput">0.00</strong>
+            </div>
           </div>
-          <div class="line">
-            <span>33 days per year</span>
-            <strong id="daysOutput">0.00</strong>
+          <p class="minimum" id="minimumMessage">The final severance is the higher value between the calculated amount and 4 months of base salary.</p>
+        </section>
+
+        <section class="tax-note" aria-label="Spain tax note">
+          <h2>Spain tax note</h2>
+          <p>For qualifying Spanish dismissal severance, AEAT says the IRPF exemption is generally limited to the mandatory legal amount and capped at 180,000. In collective dismissals/ERE, the exempt reference can be the unfair-dismissal limit: 33 days per worked year, capped at 24 monthly payments.</p>
+          <label class="tax-control">
+            Tax rate estimate
+            <select id="taxRate">
+              <option value="19">19%</option>
+              <option value="24" selected>24%</option>
+              <option value="30">30%</option>
+              <option value="37">37%</option>
+              <option value="45">45%</option>
+              <option value="47">47%</option>
+            </select>
+            <span class="hint">Used for non-Beckham tax on the taxable amount above 33 days/year.</span>
+          </label>
+          <div>
+            <div class="line">
+              <span id="taxExemptLabel">33 days/year exempt reference</span>
+              <strong id="taxExemptOutput">0.00</strong>
+            </div>
+            <div class="line">
+              <span id="taxableLabel">Taxable above 33 days</span>
+              <strong id="taxableOutput">0.00</strong>
+            </div>
+            <div class="line" id="beckhamTaxLine">
+              <span id="estimatedTaxLabel">Estimated tax</span>
+              <strong id="beckhamTaxOutput">Not applied</strong>
+            </div>
+            <div class="line" id="afterTaxLine">
+              <span>Estimated after tax</span>
+              <strong id="afterTaxOutput">Not calculated</strong>
+            </div>
           </div>
-          <div class="line">
-            <span>2 base salary months</span>
-            <strong id="extraOutput">0.00</strong>
-          </div>
-        </div>
-        <p class="minimum" id="minimumMessage">The final severance is the higher value between the calculated amount and 4 months of base salary.</p>
-      </section>
+          <p id="beckhamMessage">Without Beckham Law, this calculator treats anything above the 33 days/year amount as potentially taxable employment income. Enable Beckham Law to estimate 24% tax on the full severance total.</p>
+          <p>Sources: <a href="https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025/c02-irpf-cuestiones-generales/sujecion-irpf-aspectos-materiales/delimitacion-negativa-hecho-imponible-rentas-sujetas/rentas-exentas-articulo-7-ley-irpf/indemnizaciones-despido-cese-trabajador/cuantia-exenta-limites.html">AEAT exemption limits</a>, <a href="https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025/c02-irpf-cuestiones-generales/sujecion-irpf-aspectos-materiales/delimitacion-negativa-hecho-imponible-rentas-sujetas/rentas-exentas-articulo-7-ley-irpf/indemnizaciones-despido-cese-trabajador/indemnizaciones-exentas-derivadas-despidos-colectivos.html">AEAT collective dismissals</a>, and <a href="https://www3.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025/c15-calculo-impuesto-determinacion-cuotas-integras/regimen-fiscal-especial-aplicable-trabajadores.html">AEAT displaced-worker regime rates</a>.</p>
+        </section>
+      </div>
     </section>
   </main>
 
@@ -251,6 +450,8 @@
     const baseSalaryInput = document.getElementById("baseSalary");
     const totalSalaryInput = document.getElementById("totalSalary");
     const tenureYearsInput = document.getElementById("tenureYears");
+    const beckhamLawInput = document.getElementById("beckhamLaw");
+    const taxRateInput = document.getElementById("taxRate");
     const totalOutput = document.getElementById("totalOutput");
     const calculatedLine = document.getElementById("calculatedLine");
     const minimumLine = document.getElementById("minimumLine");
@@ -259,6 +460,17 @@
     const extraOutput = document.getElementById("extraOutput");
     const minimumOutput = document.getElementById("minimumOutput");
     const minimumMessage = document.getElementById("minimumMessage");
+    const taxExemptLabel = document.getElementById("taxExemptLabel");
+    const taxableLabel = document.getElementById("taxableLabel");
+    const taxExemptOutput = document.getElementById("taxExemptOutput");
+    const taxableOutput = document.getElementById("taxableOutput");
+    const beckhamTaxLine = document.getElementById("beckhamTaxLine");
+    const afterTaxLine = document.getElementById("afterTaxLine");
+    const estimatedTaxLabel = document.getElementById("estimatedTaxLabel");
+    const beckhamTaxOutput = document.getElementById("beckhamTaxOutput");
+    const afterTaxOutput = document.getElementById("afterTaxOutput");
+    const beckhamMessage = document.getElementById("beckhamMessage");
+    const beckhamRate = 0.24;
     const formatter = new Intl.NumberFormat(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -281,6 +493,9 @@
       const minimum = (baseSalary / 12) * 4;
       const calculated = severanceDays + extraMonths;
       const total = Math.max(calculated, minimum);
+      const taxable = Math.max(total - severanceDays, 0);
+      const selectedTaxRate = valueOf(taxRateInput) / 100;
+      const selectedTax = taxable * selectedTaxRate;
 
       calculatedLine.classList.toggle("used", calculated >= minimum);
       minimumLine.classList.toggle("used", minimum > calculated);
@@ -289,12 +504,37 @@
       renderAmount(extraOutput, extraMonths);
       renderAmount(minimumOutput, minimum);
       renderAmount(totalOutput, total);
+      beckhamTaxLine.classList.toggle("used", beckhamLawInput.checked);
+      afterTaxLine.classList.toggle("used", beckhamLawInput.checked);
+      if (beckhamLawInput.checked) {
+        const beckhamTax = total * beckhamRate;
+        taxExemptLabel.textContent = "Beckham exempt amount";
+        taxableLabel.textContent = "Beckham taxable total";
+        estimatedTaxLabel.textContent = "Estimated Beckham tax";
+        taxRateInput.disabled = true;
+        renderAmount(taxExemptOutput, 0);
+        renderAmount(taxableOutput, total);
+        renderAmount(beckhamTaxOutput, beckhamTax);
+        renderAmount(afterTaxOutput, total - beckhamTax);
+        beckhamMessage.textContent = "Beckham Law estimate applies 24% tax to the full severance total.";
+      } else {
+        taxExemptLabel.textContent = "33 days/year exempt reference";
+        taxableLabel.textContent = "Taxable above 33 days";
+        estimatedTaxLabel.textContent = "Estimated tax";
+        taxRateInput.disabled = false;
+        renderAmount(taxExemptOutput, Math.min(severanceDays, total));
+        renderAmount(taxableOutput, taxable);
+        renderAmount(beckhamTaxOutput, selectedTax);
+        renderAmount(afterTaxOutput, total - selectedTax);
+        beckhamMessage.textContent = `Without Beckham Law, this calculator treats anything above the 33 days/year amount as potentially taxable employment income and applies the selected ${(selectedTaxRate * 100).toFixed(0)}% estimate.`;
+      }
       minimumMessage.textContent = total === minimum && minimum > calculated
         ? "The final severance uses the 4 month base salary minimum."
         : "The final severance uses the calculated amount because it is above 4 months of base salary.";
     }
 
     document.getElementById("calculatorForm").addEventListener("input", calculate);
+    taxRateInput.addEventListener("change", calculate);
     calculate();
   </script>
 </body>
