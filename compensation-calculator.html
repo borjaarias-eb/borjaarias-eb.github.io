@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compensation Calculator</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --background: #f6f8fb;
+      --surface: #ffffff;
+      --surface-muted: #eef2f7;
+      --text: #101827;
+      --muted: #5f6b7a;
+      --border: #d8e0ea;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --shadow: rgba(15, 23, 42, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #10141d;
+        --surface: #171d29;
+        --surface-muted: #202838;
+        --text: #f8fafc;
+        --muted: #a9b4c2;
+        --border: #30394a;
+        --accent: #60a5fa;
+        --accent-soft: #1e3a5f;
+        --shadow: rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100dvh;
+      margin: 0;
+      padding: clamp(1rem, 4vw, 3rem);
+      background: var(--background);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(100%, 960px);
+      margin: 0 auto;
+    }
+
+    h1,
+    h2,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 0.5rem;
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      line-height: 1.05;
+    }
+
+    h2 {
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .intro {
+      max-width: 42rem;
+      margin-bottom: 2rem;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .calculator {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.9fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .panel {
+      padding: clamp(1rem, 4vw, 1.5rem);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 18px 40px var(--shadow);
+    }
+
+    .fields {
+      display: grid;
+      gap: 1rem;
+    }
+
+    label {
+      display: grid;
+      gap: 0.4rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    input {
+      width: 100%;
+      min-height: 3rem;
+      padding: 0.7rem 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font: 600 1rem/1.2 inherit;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      outline: 3px solid var(--accent-soft);
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 400;
+    }
+
+    .result {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .total {
+      padding: 1rem;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .total span,
+    .line span {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .total strong {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: clamp(2rem, 8vw, 3rem);
+      line-height: 1;
+      overflow-wrap: anywhere;
+    }
+
+    .line {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.9rem 0;
+      border-bottom: 1px solid var(--border);
+      font-weight: 400;
+    }
+
+    .line:last-child {
+      border-bottom: 0;
+    }
+
+    .line.used {
+      font-weight: 800;
+    }
+
+    .line strong {
+      font-weight: inherit;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    .minimum {
+      padding: 0.85rem;
+      border-radius: 8px;
+      background: var(--surface-muted);
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 760px) {
+      .calculator {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Compensation Calculator</h1>
+    <p class="intro">Estimate severance as max(33 days per worked year on total compensation + 2 months of base salary, 4 months of base salary).</p>
+
+    <section class="calculator" aria-label="Compensation calculator">
+      <div class="panel fields" id="calculatorForm">
+        <h2>Inputs</h2>
+        <label>
+          Base salary
+          <input id="baseSalary" type="number" min="0" step="100" inputmode="decimal" placeholder="Example: 60000">
+        </label>
+        <label>
+          Total salary
+          <input id="totalSalary" type="number" min="0" step="100" inputmode="decimal" placeholder="Example: 75000">
+          <p class="hint">Including bonus and all. Check Workday total compensation.</p>
+        </label>
+        <label>
+          Tenure in years
+          <input id="tenureYears" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Example: 4.5">
+        </label>
+      </div>
+
+      <section class="panel result" aria-live="polite">
+        <h2>Output</h2>
+        <div class="total">
+          <span>Severance</span>
+          <strong id="totalOutput">0.00</strong>
+        </div>
+        <div>
+          <div class="line" id="calculatedLine">
+            <span>33 days/year + 2 months</span>
+            <strong id="calculatedOutput">0.00</strong>
+          </div>
+          <div class="line" id="minimumLine">
+            <span>4 month minimum</span>
+            <strong id="minimumOutput">0.00</strong>
+          </div>
+          <div class="line">
+            <span>33 days per year</span>
+            <strong id="daysOutput">0.00</strong>
+          </div>
+          <div class="line">
+            <span>2 base salary months</span>
+            <strong id="extraOutput">0.00</strong>
+          </div>
+        </div>
+        <p class="minimum" id="minimumMessage">The final severance is the higher value between the calculated amount and 4 months of base salary.</p>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const baseSalaryInput = document.getElementById("baseSalary");
+    const totalSalaryInput = document.getElementById("totalSalary");
+    const tenureYearsInput = document.getElementById("tenureYears");
+    const totalOutput = document.getElementById("totalOutput");
+    const calculatedLine = document.getElementById("calculatedLine");
+    const minimumLine = document.getElementById("minimumLine");
+    const calculatedOutput = document.getElementById("calculatedOutput");
+    const daysOutput = document.getElementById("daysOutput");
+    const extraOutput = document.getElementById("extraOutput");
+    const minimumOutput = document.getElementById("minimumOutput");
+    const minimumMessage = document.getElementById("minimumMessage");
+    const formatter = new Intl.NumberFormat(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    function valueOf(input) {
+      return Number.parseFloat(input.value) || 0;
+    }
+
+    function renderAmount(element, value) {
+      element.textContent = formatter.format(value);
+    }
+
+    function calculate() {
+      const baseSalary = valueOf(baseSalaryInput);
+      const totalSalary = valueOf(totalSalaryInput);
+      const tenureYears = valueOf(tenureYearsInput);
+      const severanceDays = (totalSalary / 365) * 33 * tenureYears;
+      const extraMonths = (baseSalary / 12) * 2;
+      const minimum = (baseSalary / 12) * 4;
+      const calculated = severanceDays + extraMonths;
+      const total = Math.max(calculated, minimum);
+
+      calculatedLine.classList.toggle("used", calculated >= minimum);
+      minimumLine.classList.toggle("used", minimum > calculated);
+      renderAmount(calculatedOutput, calculated);
+      renderAmount(daysOutput, severanceDays);
+      renderAmount(extraOutput, extraMonths);
+      renderAmount(minimumOutput, minimum);
+      renderAmount(totalOutput, total);
+      minimumMessage.textContent = total === minimum && minimum > calculated
+        ? "The final severance uses the 4 month base salary minimum."
+        : "The final severance uses the calculated amount because it is above 4 months of base salary.";
+    }
+
+    document.getElementById("calculatorForm").addEventListener("input", calculate);
+    calculate();
+  </script>
+</body>
+</html>
