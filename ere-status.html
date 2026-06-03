@@ -46,7 +46,7 @@
   width:100%;
   height:100%;
   min-height:100dvh;
-  padding:clamp(1.5rem, 6vw, 4rem) 1rem calc(9.5rem + env(safe-area-inset-bottom));
+  padding:clamp(1.5rem, 6vw, 4rem) 1rem calc(12.75rem + env(safe-area-inset-bottom));
   display:flex;
   flex-direction:column;
   flex-wrap:nowrap;
@@ -168,6 +168,10 @@ body {
 .update-button {
   min-height: 2.75rem;
   width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.75rem 1rem;
   border: 1px solid var(--button-border);
   border-radius: 8px;
@@ -178,6 +182,7 @@ body {
   font: 700 0.95rem/1.2 system-ui, sans-serif;
   text-transform: uppercase;
   text-align: center;
+  text-decoration: none;
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
@@ -409,6 +414,7 @@ body {
   <div class="action-bar">
     <button class="update-button" id="query-updates" type="button">Query for updates</button>
     <button class="update-button" id="read-agreement" type="button">Read full update</button>
+    <a class="update-button" href="compensation-calculator.html">Compensation calculator</a>
   </div>
   <div class="meme-score" id="meme-score" aria-live="polite">Points: 0</div>
   <div class="agreement-modal" id="agreement-modal" aria-hidden="true">
@@ -491,6 +497,14 @@ body {
 After a very long day of negotiations, we can confirm that an agreement has been reached with the company. Discussions continued late into the evening and concluded just a short while ago.
 
 We know many of you have been waiting anxiously for news, and we wanted to share this update as soon as possible. We will walk through the details, explain what has been agreed, answer questions and discuss next steps during a collective meeting tomorrow at 15:00.
+
+There is now a compensation calculator available from this page.
+
+Current calculator conditions: severance is estimated as max(33 days per worked year on total compensation + 2 months of base salary, 4 months of base salary).
+
+Inputs: base salary from Workday > Profile > Compensation > Total Base Pay; total salary from total compensation, including bonus, on-call, forma, etc.; tenure in years.
+
+Tax estimate: without Beckham Law, the calculator treats anything above the 33 days/year amount as potentially taxable and lets you select the estimated tax rate. With Beckham Law enabled, it estimates 24% tax on the full severance total.
 
 📅  <redacted>
 
